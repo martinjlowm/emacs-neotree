@@ -101,6 +101,11 @@ buffer-local wherever it is set."
   :type 'string
   :group 'neotree)
 
+(defcustom neo-tree-display-cur-dir t
+  "*If true, display the current directory."
+  :type 'boolean
+  :group 'neotree)
+
 (defcustom neo-show-updir-line t
   "*If non-nil, hide the updir line (..)."
   :type 'boolean
@@ -730,8 +735,7 @@ PATH is value."
   (unless (null neo-banner-message)
     (let ((start (point)))
       (insert neo-banner-message)
-      (set-text-properties start (point) '(face neo-header-face)))
-    (neo-buffer--newline-and-begin)))
+      (set-text-properties start (point) '(face neo-header-face)))))
 
 (defun neo-buffer--insert-root-entry (node)
   (neo-buffer--newline-and-begin)
@@ -758,7 +762,7 @@ PATH is value."
         (node-short-name (neo-path--file-short-name node)))
     (insert-char ?\s (* (- depth 1) 2)) ; indent
     (setq btn-start-pos (point))
-    (neo-buffer--insert-with-face (if expanded "-" "+")
+    (neo-buffer--insert-with-face (if expanded "▾" "▸")
                           'neo-expand-btn-face)
     (neo-buffer--insert-with-face (concat " " node-short-name "/")
                           'neo-dir-link-face)
@@ -811,7 +815,10 @@ PATH is value."
 
 (defun neo-buffer--insert-tree (path depth)
   (if (eq depth 1)
-      (neo-buffer--insert-root-entry path))
+      (if neo-tree-display-cur-dir
+          (progn (neo-buffer--newline-and-begin)
+                 (neo-buffer--insert-root-entry path))
+        (+ depth 1)))
   (let* ((contents (neo-buffer--get-nodes path))
          (nodes (car contents))
          (leafs (cdr contents)))
